@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Daily Money - Admin</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  .admin-tabs { display:flex; gap:8px; margin-bottom:16px; }
+  .admin-tab-btn { flex:1; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--card); color:var(--text-muted); font-weight:700; font-size:12px; cursor:pointer; }
+  .admin-tab-btn.active { background:var(--gradient); color:#fff; border-color:transparent; }
+  .admin-section { display:none; }
+  .admin-section.active { display:block; }
+  .field-label { font-size:11px; color:var(--text-muted); margin:10px 0 4px; }
+  .admin-input, .admin-select, .admin-textarea { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:10px 12px; color:var(--text); font-family:inherit; font-size:13px; }
+  .task-row, .withdraw-row { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:10px; font-size:12.5px; }
+  .row-line { display:flex; justify-content:space-between; margin-bottom:4px; }
+  .row-actions { display:flex; gap:8px; margin-top:8px; }
+  .row-actions button { flex:1; padding:8px; border-radius:8px; border:none; font-weight:700; font-size:12px; cursor:pointer; }
+  .btn-approve { background: rgba(34,197,94,0.15); color: var(--green); }
+  .btn-reject { background: rgba(239,68,68,0.15); color: #ef4444; }
+  .btn-toggle { background: var(--card-2); color: var(--text); }
+  .lock-screen { text-align:center; padding-top:80px; color:var(--text-muted); }
+</style>
+</head>
+<body>
+<div class="app" id="app" style="display:none">
+  <h2 style="margin-bottom:4px">⚙️ Admin Panel</h2>
+  <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Daily Money — শুধু অ্যাডমিন অ্যাক্সেস</div>
+
+  <div class="admin-tabs" id="mainAdminTabs">
+    <button class="admin-tab-btn active" data-s="tasks">Tasks</button>
+    <button class="admin-tab-btn" data-s="withdraws">Withdraws</button>
+    <button class="admin-tab-btn" data-s="activations">Activations</button>
+    <button class="admin-tab-btn" data-s="deposits">Deposits</button>
+    <button class="admin-tab-btn" data-s="users">Users</button>
+    <button class="admin-tab-btn" data-s="allusers">All Users</button>
+    <button class="admin-tab-btn" data-s="settings">Settings</button>
+    <button class="admin-tab-btn" data-s="broadcast">Broadcast</button>
+  </div>
+
+  <!-- TASKS -->
+  <div class="admin-section active" id="s-tasks">
+    <div class="form-card">
+      <div class="field-label">Title</div>
+      <input class="admin-input" id="taskTitle" placeholder="পেমেন্ট চ্যানেলে জয়েন করুন">
+      <div class="field-label">Description</div>
+      <input class="admin-input" id="taskDesc" placeholder="আমাদের অফিসিয়াল পেমেন্ট চ্যানেলে জয়েন করুন">
+      <div class="field-label">Link</div>
+      <input class="admin-input" id="taskLink" placeholder="https://t.me/yourchannel">
+      <div class="field-label">Channel username (verified টাস্কের জন্য দরকার, যেমন @yourchannel)</div>
+      <input class="admin-input" id="taskChannel" placeholder="@yourchannel">
+      <div class="field-label">Reward (৳)</div>
+      <input class="admin-input" type="number" id="taskReward" placeholder="70">
+      <div class="field-label">Type</div>
+      <select class="admin-select" id="taskType">
+        <option value="normal">Normal (Join করে ফিরে আসলেই কমপ্লিট)</option>
+        <option value="verified">Verified (আসলেই জয়েন করেছে কিনা চেক হবে)</option>
+      </select>
+      <button class="btn btn-primary btn-full" style="margin-top:12px" id="createTaskBtn">+ Add Task</button>
+    </div>
+    <div id="taskListAdmin"></div>
+  </div>
+
+  <!-- WITHDRAWS -->
+  <div class="admin-section" id="s-withdraws">
+    <div class="admin-tabs" id="withdrawSubTabs" style="margin-bottom:10px">
+      <button class="admin-tab-btn active" data-wstatus="pending">Pending</button>
+      <button class="admin-tab-btn" data-wstatus="approved">Approved</button>
+      <button class="admin-tab-btn" data-wstatus="rejected">Rejected</button>
+    </div>
+    <div id="withdrawListAdmin"></div>
+  </div>
+
+  <!-- ACTIVATIONS (withdraw security gate: Telegram Username + TGID submissions) -->
+  <div class="admin-section" id="s-activations">
+    <div class="admin-tabs" id="activationSubTabs" style="margin-bottom:10px">
+      <button class="admin-tab-btn active" data-astatus="pending">Pending</button>
+      <button class="admin-tab-btn" data-astatus="approved">Approved</button>
+      <button class="admin-tab-btn" data-astatus="rejected">Rejected</button>
+    </div>
+    <div id="activationListAdmin"></div>
+  </div>
+
+  <!-- DEPOSITS -->
+  <div class="admin-section" id="s-deposits">
+    <div class="admin-tabs" id="depositSubTabs" style="margin-bottom:10px">
+      <button class="admin-tab-btn active" data-dstatus="pending">Pending</button>
+      <button class="admin-tab-btn" data-dstatus="approved">Approved</button>
+      <button class="admin-tab-btn" data-dstatus="rejected">Rejected</button>
+    </div>
+    <div id="depositListAdmin"></div>
+  </div>
+
+  <!-- USERS -->
+  <div class="admin-section" id="s-users">
+    <div class="form-card">
+      <div class="field-label">Telegram ID অথবা Username দিয়ে খুঁজুন</div>
+      <input class="admin-input" id="userSearchInput" placeholder="Telegram ID বা username">
+      <button class="btn btn-primary btn-full" style="margin-top:10px" id="userSearchBtn">Search</button>
+    </div>
+    <div id="userResult"></div>
+  </div>
+
+  <!-- ALL USERS -->
+  <div class="admin-section" id="s-allusers">
+    <div id="allUsersList"></div>
+  </div>
+
+  <!-- SETTINGS ("Please Fill Up" activation notice text — 2 editable variants) -->
+  <div class="admin-section" id="s-settings">
+    <div class="form-card">
+      <div class="field-label">এখন কোনটা user-দের দেখানো হবে?</div>
+      <select class="admin-select" id="settingsActiveVariant">
+        <option value="normal">Normal Text</option>
+        <option value="warning">Warning Text (বেশি কড়া)</option>
+      </select>
+
+      <div class="field-label" style="margin-top:14px">Normal Text</div>
+      <textarea class="admin-textarea" id="settingsTextNormal" rows="4" placeholder="সাধারণ instruction text..."></textarea>
+
+      <div class="field-label" style="margin-top:14px">Warning Text</div>
+      <textarea class="admin-textarea" id="settingsTextWarning" rows="4" placeholder="কড়া warning text (দরকার হলে ব্যবহার করুন)..."></textarea>
+
+      <div class="field-label" style="margin-top:14px">"Copy Username & UID" Button-এর Text</div>
+      <textarea class="admin-textarea" id="settingsCopyButtonText" rows="2" placeholder="📋 আমার Username ও UID কপি করুন"></textarea>
+
+      <div class="field-label" style="margin-top:14px">Username Input Field-এর Placeholder Text</div>
+      <input class="admin-input" id="settingsUsernamePlaceholder" placeholder="Telegram Username (Paste করুন)">
+
+      <div class="field-label" style="margin-top:14px">TGID Input Field-এর Placeholder Text</div>
+      <input class="admin-input" id="settingsTgidPlaceholder" placeholder="Telegram ID / UID (Paste করুন)">
+
+      <button class="btn btn-primary btn-full" style="margin-top:14px" id="saveSettingsBtn">Save Settings</button>
+    </div>
+  </div>
+
+  <!-- BROADCAST (send a message to every user via the bot) -->
+  <div class="admin-section" id="s-broadcast">
+    <div class="form-card">
+      <div class="field-label">Message (সব ইউজারকে বট দিয়ে পাঠানো হবে)</div>
+      <textarea class="admin-textarea" id="broadcastMessage" rows="6" placeholder="এখানে আপনার notification message লিখুন..."></textarea>
+      <button class="btn btn-primary btn-full" style="margin-top:12px" id="sendBroadcastBtn">📢 সবাইকে পাঠান</button>
+      <div id="broadcastResult" style="margin-top:10px;font-size:12.5px;color:var(--text-muted)"></div>
+    </div>
+  </div>
+</div>
+
+<div class="lock-screen" id="lockScreen">🔒 এই পেজটি শুধুমাত্র অ্যাডমিন Telegram অ্যাকাউন্ট দিয়ে অ্যাক্সেস করা যাবে।</div>
+<div class="toast" id="toast"></div>
+<script src="admin.js"></script>
+</body>
+</html>

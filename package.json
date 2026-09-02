@@ -1,0 +1,8 @@
+{
+  "name": "daily-money-miniapp",
+  "version": "1.0.0",
+  "description": "Daily Money Telegram Mini App - ad earning, referral, withdraw",
+  "dependencies": {
+    "mongodb": "^6.5.0"
+  }
+}

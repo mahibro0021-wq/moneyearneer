@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "functions": {
+    "api/admin.js": { "maxDuration": 60 }
+  },
+  "rewrites": [
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
+}

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>প্রতিদিন টাকা - Daily Money</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+<div class="app">
+
+  <!-- ================= HOME TAB ================= -->
+  <div id="tab-home" class="tab active">
+    <div class="home-header">
+      <div class="profile">
+        <div class="avatar-ring">
+          <img id="avatarImg" src="" alt="" style="display:none">
+          <div id="avatarFallback" class="avatar-fallback">U</div>
+        </div>
+        <div>
+          <div class="profile-name" id="profileName">লোড হচ্ছে...</div>
+          <div class="profile-balance" id="profileBalance">ব্যালেন্স: ৳0.00</div>
+        </div>
+      </div>
+      <div class="bell-wrap">
+        <button class="bell-btn" id="bellBtn">🔔</button>
+        <span class="bell-dot" id="bellDot" style="display:none"></span>
+      </div>
+    </div>
+
+    <div class="balance-card">
+      <div class="balance-label">মোট ব্যালেন্স</div>
+      <div class="balance-amount">৳<span id="homeBalance">0.00</span></div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-icon blue">📹</div>
+        <div class="stat-label">এড দেখা হয়েছে</div>
+        <div class="stat-value" id="adsWatchedStat">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-icon purple">👥</div>
+        <div class="stat-label">মোট রেফার</div>
+        <div class="stat-value" id="referralsStat">0</div>
+      </div>
+    </div>
+
+    <div class="promo-box">
+      <div class="promo-top">
+        <div class="promo-icon">🔗</div>
+        <div class="promo-text">প্রতিদিন বন্ধুদের রেফার করুন এবং একটি রেফারে <b>৳130 বোনাস</b> পান 🎁</div>
+      </div>
+      <div class="ref-link-label">YOUR REFERRAL LINK</div>
+      <div class="ref-link-box" id="refLinkBox">https://t.me/...</div>
+      <div class="ref-actions">
+        <button class="btn btn-secondary" id="copyRefBtn">📋 Copy</button>
+        <button class="btn btn-primary" id="shareRefBtn">🔗 Share</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TASK TAB ================= -->
+  <div id="tab-task" class="tab">
+    <div class="ad-card">
+      <div class="ad-icon">📹</div>
+      <h3>Rewarded Ad</h3>
+      <p>প্রতিটি বিজ্ঞাপনের জন্য <b>৳10</b> আয় করুন।</p>
+      <button class="btn btn-primary btn-full" id="watchAdBtn">Watch Ad</button>
+      <div class="progress-row">
+        <span>PROGRESS</span>
+        <span id="adProgressLabel">0 / 17 TODAY</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="adProgressFill" style="width:0%"></div></div>
+      <div class="ad-note">পুরস্কার পেতে ১৫ সেকেন্ডের জন্য বিজ্ঞাপনে থাকুন। মাঝপথে বের হয়ে গেলে রিওয়ার্ড পাবেন না।</div>
+    </div>
+
+    <div class="section-title">
+      <span>🎯 SOCIAL TASK</span>
+      <span class="badge">AVAILABLE</span>
+    </div>
+    <div id="taskList"></div>
+
+    <div class="section-title">🏆 ACHIEVEMENT TASKS</div>
+    <div id="achievementList"></div>
+  </div>
+
+  <!-- ================= WITHDRAW TAB ================= -->
+  <div id="tab-withdraw" class="tab">
+    <div class="withdraw-header">
+      <div class="icon-box">💳</div>
+      <h2>Withdraw</h2>
+      <span class="activation-status-badge" id="activationStatusBadge" style="display:none"></span>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-label" style="margin-top:0">মোট ব্যালেন্স</div>
+        <div class="stat-value">৳<span id="wdBalance">0.00</span></div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label" style="margin-top:0">মোট রেফার</div>
+        <div class="stat-value" id="wdReferrals">0</div>
+      </div>
+    </div>
+
+    <!-- Shown before EVERY withdraw attempt (once the amount/balance
+         actually qualifies) — either an admin approves it from the admin
+         panel, or it auto-approves on its own after the review window.
+         Hidden (display:none) once state.accountActive is true for the
+         current withdraw. Right after that withdraw goes through, the
+         gate resets so the next withdraw asks again. -->
+    <div class="form-card" id="activationGate" style="display:none">
+      <div class="activation-notice">
+        🔒 <b>Account Active করে Withdraw দিতে হবে।</b><br>
+        নিচে তথ্য দিয়ে সাবমিট করুন। Admin Approve করলেই আপনি Withdraw করতে পারবেন।
+      </div>
+
+      <div class="activation-pending" id="activationPendingNotice" style="display:none">
+        ⏳ আপনার Submission <b>Pending</b> আছে — Admin রিভিউ করছেন। রিভিউ শেষ না হলেও এটি নিজে থেকেই Active হয়ে যাবে।
+      </div>
+
+      <div id="activationFormWrap">
+        <div class="activation-must-fill">⚠️ অবশ্যই এই ফর্মটি পূরণ করে সাবমিট করতে হবে</div>
+
+        <div class="activation-title">Please Fill Up</div>
+
+        <div class="copy-notice-box">
+          <span class="copy-notice-text" id="activationNoticeText">লোড হচ্ছে...</span>
+          <button class="copy-icon-btn" id="copyNoticeTextBtn" title="Copy">📋</button>
+        </div>
+
+        <button class="btn btn-secondary btn-full" id="copyMyInfoBtn" style="margin:12px 0 10px">📋 আমার Username ও UID কপি করুন</button>
+
+        <div class="form-field">
+          <span class="field-icon">📮</span>
+          <input type="text" id="actUsernameInput" placeholder="Telegram Username (Paste করুন)">
+        </div>
+        <div class="form-field">
+          <span class="field-icon">🆔</span>
+          <input type="text" id="actTgIdInput" placeholder="Telegram ID / UID (Paste করুন)" inputmode="numeric">
+        </div>
+
+        <button class="btn btn-primary btn-full" id="submitActivationBtn">Submit</button>
+      </div>
+
+      <div class="section-title" style="margin-top:16px">
+        <span>SUBMISSIONS</span>
+      </div>
+      <div id="activationHistoryList"><div class="empty-state">এখনো কোনো Submission নেই</div></div>
+    </div>
+
+    <div class="form-card" id="withdrawForm">
+      <div class="form-field">
+        <span class="field-icon">🏦</span>
+        <select id="methodSelect">
+          <option value="bkash">BKash (মিনিমাম ৳1000)</option>
+          <option value="nagad">Nagad (মিনিমাম ৳1000)</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <span class="field-icon">💳</span>
+        <input type="text" id="accountNumberInput" placeholder="Account Number" inputmode="numeric">
+      </div>
+      <div class="form-field">
+        <span class="field-icon">🔗</span>
+        <input type="number" id="amountInput" placeholder="Amount">
+      </div>
+      <button class="btn btn-primary btn-full" id="requestWithdrawBtn">Request Withdraw</button>
+    </div>
+
+    <div class="live-row">
+      <span class="live-dot"></span>
+      <span class="live-title">🔴 LIVE WITHDRAW</span>
+      <span class="live-badge">REALTIME</span>
+    </div>
+    <div id="liveWithdrawList"></div>
+
+    <div class="section-title">
+      <span>WITHDRAW HISTORY</span>
+      <span class="badge" id="refreshHistoryBtn" style="cursor:pointer;background:var(--card-2);color:var(--text-muted)">REFRESH</span>
+    </div>
+    <div id="historyList"><div class="empty-state">এখনো কোনো উইথড্র রিকুয়েস্ট নেই</div></div>
+  </div>
+
+  <!-- ================= NAV ================= -->
+  <div class="bottom-nav">
+    <button class="nav-item active" data-tab="home">
+      <span>🧰</span><span>HOME</span>
+    </button>
+    <button class="nav-item" data-tab="task">
+      <span>👑</span><span>TASK</span>
+    </button>
+    <button class="nav-item" data-tab="withdraw">
+      <span>🎁</span><span>WITHDRAW</span>
+    </button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- ================= NOTIFICATIONS PANEL ================= -->
+  <div class="modal-overlay" id="notifOverlay">
+    <div class="modal-sheet">
+      <div class="notif-header">
+        <h3>🔔 Notifications</h3>
+        <button class="notif-close-btn" id="notifCloseBtn">✕</button>
+      </div>
+      <div id="notifList">
+        <div class="notif-empty">
+          <div class="notif-empty-icon">🔔</div>
+          <div>কোনো notification নেই</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src='//libtl.com/sdk.js' data-zone='11678821' data-sdk='show_11678821'></script>
+<script src="app.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
