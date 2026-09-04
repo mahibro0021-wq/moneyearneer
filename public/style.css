@@ -379,6 +379,16 @@ body {
 .tab { display: none; }
 .tab.active { display: block; }
 
+/* ---------- Support button (visible on every tab) ---------- */
+.support-fab {
+  position: fixed; bottom: 86px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 20px; border-radius: 999px;
+  background: var(--gradient); color: #fff; text-decoration: none;
+  font-size: 13px; font-weight: 700; white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(124,58,237,0.45);
+}
+
 /* ---------- Modal / toast ---------- */
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.6);
